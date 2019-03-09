@@ -21,8 +21,11 @@ boolToMaybe x = if x then Just () else Nothing
 numSeconds = 5
 sampleRate = 22050
 
-sound :: Int -> Int -> Double
-sound sampleRate t = sin (2.0 * pi * 440.0 / (fromIntegral sampleRate) * fromIntegral t)
+sine :: Int -> Double -> Int -> Double
+sine sampleRate freq t = sin (2.0 * pi * freq / (fromIntegral sampleRate) * fromIntegral t)
+
+manysine :: Int -> Int -> Double
+manysine sampleRate t = (sine sampleRate 440.0 t + sine sampleRate 660.0 t + sine sampleRate 880.0 t) / 3.0
 
 amplitudeToInt :: Double -> Int16
 amplitudeToInt x =
@@ -45,7 +48,7 @@ main = do
    let arraySize = numSamples * sampleBytes
    array <- fmap castPtr $ mallocBytes arraySize
 
-   mapM_ (\t -> pokeByteOff array (t*sampleBytes) (amplitudeToInt $ sound sampleRate t)) [0..numSamples]
+   mapM_ (\t -> pokeByteOff array (t*sampleBytes) (amplitudeToInt $ manysine sampleRate t)) [0..numSamples]
    AL.bufferData buffer $= AL.BufferData (MemoryRegion array (fromIntegral arraySize))
                                          AL.Mono16
                                          (fromIntegral sampleRate)
