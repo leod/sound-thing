@@ -9,7 +9,8 @@ import Control.Concurrent (threadDelay)
 
 import Sound.OpenAL as AL
 
-import Sample (Sampler, sine, mix, sample)
+import qualified Sample
+import Sample (Sampler, sine, mix, chromatic)
 
 amplitudeToInt :: Double -> Int16
 amplitudeToInt x =
@@ -46,22 +47,27 @@ manysine = mix [sine 440.0, sine 660.0, sine 880.0]
 
 sampleRate = 22050
 
-samples = sample manysine 5.0 sampleRate
+sample :: Double -> Sampler -> [Double]
+sample = Sample.sample sampleRate
+
+samples :: [Double]
+samples = concat $ map (sample 0.5 . sine) (chromatic 12 440.0)
 
 main :: IO ()
 main = do
-   deviceName <- fmap listToMaybe $ AL.get AL.allDeviceSpecifiers
-   device <- check "openDevice" $ AL.openDevice deviceName
+    putStrLn $ show $ chromatic 12 440.0 
+    deviceName <- fmap listToMaybe $ AL.get AL.allDeviceSpecifiers
+    device <- check "openDevice" $ AL.openDevice deviceName
 
-   context <- check "createContext" $ AL.createContext device []
-   AL.currentContext $= Just context
+    context <- check "createContext" $ AL.createContext device []
+    AL.currentContext $= Just context
 
-   buffer <- samplesToBuffer sampleRate samples
+    buffer <- samplesToBuffer sampleRate samples
 
-   source <- AL.genObjectName
-   AL.buffer source $= Just buffer
-   AL.play [source]
+    source <- AL.genObjectName
+    AL.buffer source $= Just buffer
+    AL.play [source]
 
-   threadDelay (10*1000*1000)
+    threadDelay (10*1000*1000)
 
-   check "closeDevice" $ fmap boolToMaybe $ AL.closeDevice device
+    check "closeDevice" $ fmap boolToMaybe $ AL.closeDevice device
