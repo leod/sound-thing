@@ -9,8 +9,7 @@ import Control.Concurrent (threadDelay)
 
 import Sound.OpenAL as AL
 
-import qualified Sample
-import Sample (Sampler, sine, mix, chromatic)
+import Sample
 
 amplitudeToInt :: Double -> Int16
 amplitudeToInt x =
@@ -47,15 +46,15 @@ manysine = mix [sine 440.0, sine 660.0, sine 880.0]
 
 sampleRate = 22050
 
-sample :: Double -> Sampler -> [Double]
-sample = Sample.sample sampleRate
+--notes = chromatic 12 440.0
+notes = chromatic 6 (freq C) ++ major (freq C) ++ minor (freq C)
 
 samples :: [Double]
-samples = concat $ map (sample 0.5 . sine) (chromatic 12 440.0)
+samples = concat $ map (\f -> sample sampleRate 1.0 (sine f) ++ take sampleRate (repeat 0.0)) notes
 
 main :: IO ()
 main = do
-    putStrLn $ show $ chromatic 12 440.0 
+    putStrLn $ show $ notes
     deviceName <- fmap listToMaybe $ AL.get AL.allDeviceSpecifiers
     device <- check "openDevice" $ AL.openDevice deviceName
 
