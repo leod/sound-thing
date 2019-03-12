@@ -53,21 +53,19 @@ evens (x:y:zs) = x:(evens zs)
 evens [x] = [x]
 evens [] = []
 
---notes = (evens . chromatic 12) (freq C) ++ tail (major (freq C)) ++ tail (minor (freq C))
-notes = major (freq C) ++ major (freq G) --tail (reverse (major (freq C)))
-        -- ++ major (
+someScales :: [[Double]]
+someScales = map return $ major (freq C) ++ major (freq G) 
 
-chordy :: Double -> Sampler
-chordy = mix . map (sine . fixToScale (freq C)) . majorChord
+punk = map (closestInversion (majorChord (freq C))) $ progression (major (freq C)) [0, 4, 5, 3]
 
-play :: Double -> [Double]
-play f = sample' 1.5 (fade 0.005 hann_window 1.5 |*| chordy f)
+play :: [Double] -> [Double]
+play fs = sample' 1.5 (fade 0.005 hann_window 1.5 |*| mix (map sine fs))
 
 pause :: Double -> [Double]
 pause duration = sample' duration (const 0.0)
 
 samples :: [Double]
-samples = concatMap play notes
+samples = concatMap play punk
 
 main :: IO ()
 main = do
