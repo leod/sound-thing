@@ -2,6 +2,11 @@ module Sample where
 
 type Sampler = Double -> Double
 
+infixl 8 |*| 
+
+(|*|) :: Sampler -> Sampler -> Sampler
+(|*|) g h t = g t * h t
+
 sine :: Double -> Sampler
 sine f t = sin (2.0 * pi * f * t)
 
@@ -27,16 +32,22 @@ sample sampleRate duration g =
         ts = map ((/ fromIntegral sampleRate) . fromIntegral) [0..n-1] 
     in map g ts
 
-hann_window :: Double -> Sampler -> Sampler
-hann_window duration g t =
-    let w = (sin (pi * t / duration)) ** 2.0
-    in g t * w
+type Window = Double -> Sampler
 
-hamming_window :: Double -> Sampler -> Sampler
-hamming_window duration g t =
+hann_window :: Window
+hann_window t_end t = (sin (pi * t / t_end)) ** 2.0
+
+hamming_window :: Window
+hamming_window t_end t =
     let a_0 = 0.54
-        w = a_0 - (1 - a_0) * cos (2 * pi * t / duration)
-    in g t * w
+    in a_0 - (1 - a_0) * cos (2 * pi * t / t_end)
+
+fade :: Double -> Window -> Double -> Sampler
+fade duration window t_end t =
+    if t >= 0.0 && t <= duration then window (duration * 2.0) t
+    else if t > duration && t < t_end - duration then 1.0
+    else if t >= t_end - duration && t <= t_end then window (duration * 2.0) (t_end - t)
+    else 0.0
 
 whole_ratio = 2.0 ** (1.0 / 6.0)
 half_ratio = 2.0 ** (1.0 / 12.0)

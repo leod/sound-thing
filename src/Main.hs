@@ -56,7 +56,7 @@ evens [] = []
 notes = (evens . chromatic 12) (freq C) ++ major (freq C) ++ minor (freq C)
 
 play :: Double -> [Double]
-play = sample' 1.0 . hann_window 1.0 . sine
+play f = sample' 3.0 (fade 1.0 hann_window 3.0 |*| sine f)
 
 pause :: Double -> [Double]
 pause duration = sample' duration (const 0.0)
@@ -66,7 +66,6 @@ samples = concatMap play notes
 
 main :: IO ()
 main = do
-    putStrLn $ show $ notes
     deviceName <- fmap listToMaybe $ AL.get AL.allDeviceSpecifiers
     device <- check "openDevice" $ AL.openDevice deviceName
 
@@ -77,6 +76,8 @@ main = do
 
     source <- AL.genObjectName
     AL.buffer source $= Just buffer
+
+    putStrLn "Playing"
     AL.play [source]
 
     threadDelay (ceiling $ duration sampleRate (length samples)*1000*1000)
