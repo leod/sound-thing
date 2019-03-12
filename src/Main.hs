@@ -56,7 +56,7 @@ evens [] = []
 notes = (evens . chromatic 12) (freq C) ++ major (freq C) ++ minor (freq C)
 
 play :: Double -> [Double]
-play f = sample' 3.0 (fade 1.0 hann_window 3.0 |*| sine f)
+play f = sample' 3.0 (fade 0.005 hann_window 3.0 |*| sine f)
 
 pause :: Double -> [Double]
 pause duration = sample' duration (const 0.0)
