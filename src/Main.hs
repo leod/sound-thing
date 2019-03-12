@@ -62,8 +62,7 @@ pause :: Double -> [Double]
 pause duration = sample' duration (const 0.0)
 
 samples :: [Double]
---samples = concat $ map (\f -> play f ++ pause 1.0) notes
-samples = concat $ map (\f -> play f) notes
+samples = concatMap play notes
 
 main :: IO ()
 main = do
