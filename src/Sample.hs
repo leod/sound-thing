@@ -1,5 +1,8 @@
 module Sample where
 
+import Data.Ord (comparing)
+import Data.List (minimumBy)
+
 type Sampler = Double -> Double
 
 infixl 8 |*| 
@@ -83,14 +86,25 @@ minorChord :: Double -> [Double]
 minorChord f = [f, f * h^3, f * h^7]
     where h = half_ratio
 
---progression :: [Double] -> [Int] -> [[Double]]
---progression f ns = 
+progression :: [Double] -> [Int] -> [[Double]]
+progression fs = map (majorChord . (fs !!))
 
 fixToScale :: Double -> Double -> Double
 fixToScale f_scale f =
   if f > 2.0 * f_scale then f / 2.0
   else if f < f_scale then f * 2.0
   else f
+
+inversions :: [Double] -> [[Double]]
+inversions (f:fs) = do
+  ys <- inversions fs 
+  [f / 2.0 : ys, f : ys, f * 2.0 : ys]
+inversions [] = [[]]
+
+distance :: [Double] -> [Double] -> Double
+distance cs ds = sum . map (abs . uncurry (-)) $ zip cs ds
+
+closestInversion cs = minimumBy (comparing (distance cs)) . inversions
 
 chromatic :: Int -> Double -> [Double]
 chromatic n f =
