@@ -75,6 +75,23 @@ minor f = scanl (*) f scale
           h = half_ratio
           scale = [w, h, w, w, h, w, w]
 
+majorChord :: Double -> [Double]
+majorChord f = [f, f * h^4, f * h^7]
+    where h = half_ratio
+
+minorChord :: Double -> [Double]
+minorChord f = [f, f * h^3, f * h^7]
+    where h = half_ratio
+
+--progression :: [Double] -> [Int] -> [[Double]]
+--progression f ns = 
+
+fixToScale :: Double -> Double -> Double
+fixToScale f_scale f =
+  if f > 2.0 * f_scale then f / 2.0
+  else if f < f_scale then f * 2.0
+  else f
+
 chromatic :: Int -> Double -> [Double]
 chromatic n f =
     -- f * ratio^n = 2 * f

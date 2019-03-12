@@ -53,10 +53,15 @@ evens (x:y:zs) = x:(evens zs)
 evens [x] = [x]
 evens [] = []
 
-notes = (evens . chromatic 12) (freq C) ++ major (freq C) ++ minor (freq C)
+--notes = (evens . chromatic 12) (freq C) ++ tail (major (freq C)) ++ tail (minor (freq C))
+notes = major (freq C) ++ major (freq G) --tail (reverse (major (freq C)))
+        -- ++ major (
+
+chordy :: Double -> Sampler
+chordy = mix . map (sine . fixToScale (freq C)) . majorChord
 
 play :: Double -> [Double]
-play f = sample' 3.0 (fade 0.005 hann_window 3.0 |*| sine f)
+play f = sample' 1.5 (fade 0.005 hann_window 1.5 |*| chordy f)
 
 pause :: Double -> [Double]
 pause duration = sample' duration (const 0.0)
