@@ -7,7 +7,8 @@ import Foreign.Ptr (castPtr)
 import Foreign.Marshal.Alloc (mallocBytes, free)
 import Control.Concurrent (threadDelay)
 
-import Sound.OpenAL as AL
+import qualified Sound.OpenAL as AL
+import Sound.OpenAL (($=))
 
 import Sample
 
@@ -25,7 +26,7 @@ samplesToBuffer sampleRate xs = do
     let mapping = zip [0..] (map amplitudeToInt xs)
     mapM_ (uncurry $ pokeElemOff array) mapping
 
-    let memoryRegion = MemoryRegion array (fromIntegral arraySize)
+    let memoryRegion = AL.MemoryRegion array (fromIntegral arraySize)
     let bufferData = AL.BufferData memoryRegion AL.Mono16 (fromIntegral sampleRate)
 
     buffer <- AL.genObjectName
@@ -46,11 +47,23 @@ manysine = mix [sine 440.0, sine 660.0, sine 880.0]
 
 sampleRate = 22050
 
---notes = chromatic 12 440.0
-notes = chromatic 6 (freq C) ++ major (freq C) ++ minor (freq C)
+sample' = sample sampleRate
+
+evens (x:y:zs) = x:(evens zs)
+evens [x] = [x]
+evens [] = []
+
+notes = (evens . chromatic 12) (freq C) ++ major (freq C) ++ minor (freq C)
+
+play :: Double -> [Double]
+play = sample' 1.0 . hann_window 1.0 . sine
+
+pause :: Double -> [Double]
+pause duration = sample' duration (const 0.0)
 
 samples :: [Double]
-samples = concat $ map (\f -> sample sampleRate 1.0 (sine f) ++ take sampleRate (repeat 0.0)) notes
+--samples = concat $ map (\f -> play f ++ pause 1.0) notes
+samples = concat $ map (\f -> play f) notes
 
 main :: IO ()
 main = do
@@ -67,6 +80,6 @@ main = do
     AL.buffer source $= Just buffer
     AL.play [source]
 
-    threadDelay (10*1000*1000)
+    threadDelay (ceiling $ duration sampleRate (length samples)*1000*1000)
 
     check "closeDevice" $ fmap boolToMaybe $ AL.closeDevice device
